@@ -1,5 +1,6 @@
 fastapi
-uvicorn
+uvicorn[standard]
+gunicorn
 numpy
 pandas
 sqlalchemy
@@ -8,3 +9,4 @@ pydantic-settings
 python-multipart
 python-dotenv
 pyodbc
+pymssql
