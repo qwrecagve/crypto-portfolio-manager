@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 15, 12, 8;
+  --background-end-rgb: 0, 0, 0;
+  --accent-color: #fbbf24; /* Gold */
+  --accent-secondary: #d97706; /* Amber Gold */
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: radial-gradient(
+      circle at center,
+      rgb(var(--background-start-rgb)),
+      rgb(var(--background-end-rgb))
+    );
+  min-height: 100vh;
+  font-family: 'Outfit', sans-serif;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(251, 191, 36, 0.1);
+  border-radius: 30px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: rgba(251, 191, 36, 0.05);
+  border-color: rgba(251, 191, 36, 0.5);
+  box-shadow: 0 10px 40px -10px rgba(251, 191, 36, 0.2);
+  transform: translateY(-8px) scale(1.01);
+}
+
+.gradient-text {
+  background: linear-gradient(to right, #fef3c7, #fbbf24, #d97706);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.gradient-bg {
+  background: linear-gradient(45deg, #fbbf24, #d97706);
+}
+
+.gold-glow {
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+}
+
+@keyframes pulse-gold {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.animate-pulse-gold {
+  animation: pulse-gold 3s infinite;
+}
