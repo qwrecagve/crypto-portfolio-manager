@@ -51,10 +51,27 @@ export default function Dashboard() {
 
   const handleAddTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Ma'lumot yuborilmoqda:", formData);
-    // Bu yerda API ga yuborish kodi bo'ladi
+    
+    // Yangi aktivni yaratish
+    const newAsset = {
+      symbol: formData.symbol,
+      name: formData.symbol === 'BTC' ? 'Bitcoin' : formData.symbol === 'ETH' ? 'Ethereum' : formData.symbol,
+      amount: parseFloat(formData.amount),
+      current_price: parseFloat(formData.price),
+      total_value: parseFloat(formData.amount) * parseFloat(formData.price)
+    };
+
+    // Portfelni yangilash
+    setPortfolio((prev: any) => ({
+      ...prev,
+      total_value: prev.total_value + newAsset.total_value,
+      assets_count: prev.assets.some((a: any) => a.symbol === newAsset.symbol) ? prev.assets_count : prev.assets_count + 1,
+      assets: [...prev.assets, newAsset]
+    }));
+
     setIsModalOpen(false);
-    alert("Tranzaksiya muvaffaqiyatli saqlandi!");
+    setFormData({ symbol: '', amount: '', price: '', type: 'buy' });
+    alert(`${formData.symbol} muvaffaqiyatli qo'shildi!`);
   };
 
   return (
