@@ -24,19 +24,15 @@ export default function Dashboard() {
 
   const fetchPortfolio = async () => {
     try {
-      // Real API ulanishi (agar backend ishlayotgan bo'lsa)
-      // const res = await fetch('https://crypto-api-v3-oybek.azurewebsites.net/portfolio/summary');
-      // const data = await res.json();
-      // setPortfolio(data);
-      
-      // Mock data for demo
+      // Mock data for demo including Cash
       setPortfolio({
-        total_value: 45230.50,
-        assets_count: 3,
+        total_value: 55230.50,
+        assets_count: 4,
         assets: [
           { symbol: 'BTC', name: 'Bitcoin', amount: 0.5, current_price: 65000, total_value: 32500 },
           { symbol: 'ETH', name: 'Ethereum', amount: 4.2, current_price: 3500, total_value: 14700 },
-          { symbol: 'SOL', name: 'Solana', amount: 15, current_price: 145, total_value: 2175 }
+          { symbol: 'SOL', name: 'Solana', amount: 15, current_price: 145, total_value: 2175 },
+          { symbol: 'USD', name: 'Cash (Naqd pul)', amount: 5855.50, current_price: 1, total_value: 5855.50 }
         ]
       });
       setLoading(false);
@@ -52,37 +48,47 @@ export default function Dashboard() {
   const handleAddTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Yangi aktivni yaratish
+    const amount = parseFloat(formData.amount);
+    const price = parseFloat(formData.price);
+    const total_cost = amount * price;
+    const isSell = formData.type === 'sell';
+
     const newAsset = {
       symbol: formData.symbol,
       name: formData.symbol === 'BTC' ? 'Bitcoin' : formData.symbol === 'ETH' ? 'Ethereum' : formData.symbol,
-      amount: parseFloat(formData.amount),
-      current_price: parseFloat(formData.price),
-      total_value: parseFloat(formData.amount) * parseFloat(formData.price)
+      amount: isSell ? -amount : amount,
+      current_price: price,
+      total_value: total_cost
     };
 
-    // Portfelni yangilash (Mavjud bo'lsa qo'shish/ayirish, bo'lmasa yangi yaratish)
     setPortfolio((prev: any) => {
-      const isSell = formData.type === 'sell';
-      const changeAmount = isSell ? -parseFloat(formData.amount) : parseFloat(formData.amount);
-      
-      const existingAssetIndex = prev.assets.findIndex((a: any) => a.symbol === newAsset.symbol);
       let updatedAssets = [...prev.assets];
-
-      if (existingAssetIndex !== -1) {
-        // Mavjud aktivni yangilash
-        updatedAssets[existingAssetIndex] = {
-          ...updatedAssets[existingAssetIndex],
-          amount: updatedAssets[existingAssetIndex].amount + changeAmount,
-          total_value: (updatedAssets[existingAssetIndex].amount + changeAmount) * newAsset.current_price
+      
+      // 1. Kripto aktivni yangilash
+      const existingIndex = updatedAssets.findIndex(a => a.symbol === newAsset.symbol);
+      if (existingIndex !== -1) {
+        updatedAssets[existingIndex] = {
+          ...updatedAssets[existingIndex],
+          amount: updatedAssets[existingIndex].amount + newAsset.amount,
+          total_value: (updatedAssets[existingIndex].amount + newAsset.amount) * price
         };
       } else if (!isSell) {
-        // Yangi aktiv qo'shish (faqat sotib olinganda)
-        updatedAssets.push(newAsset);
+        updatedAssets.push({...newAsset, amount: amount, total_value: total_cost});
       }
 
-      // Miqdori 0 yoki undan kam bo'lib qolsa ro'yxatdan o'chirish
-      updatedAssets = updatedAssets.filter(a => a.amount > 0);
+      // 2. Naqd pul (USD) balansini yangilash
+      const cashIndex = updatedAssets.findIndex(a => a.symbol === 'USD');
+      if (cashIndex !== -1) {
+        const cashChange = isSell ? total_cost : -total_cost;
+        updatedAssets[cashIndex] = {
+          ...updatedAssets[cashIndex],
+          amount: updatedAssets[cashIndex].amount + cashChange,
+          total_value: updatedAssets[cashIndex].amount + cashChange
+        };
+      }
+
+      // 0 bo'lib qolgan kriptolarni o'chirish (USD dan tashqari)
+      updatedAssets = updatedAssets.filter(a => a.symbol === 'USD' || a.amount > 0);
 
       return {
         ...prev,
@@ -94,7 +100,7 @@ export default function Dashboard() {
 
     setIsModalOpen(false);
     setFormData({ symbol: '', amount: '', price: '', type: 'buy' });
-    alert(`${formData.symbol} muvaffaqiyatli qo'shildi!`);
+    alert(`${formData.symbol} tranzaksiyasi bajarildi!`);
   };
 
   return (
