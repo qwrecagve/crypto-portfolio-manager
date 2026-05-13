@@ -61,13 +61,30 @@ export default function Dashboard() {
       total_value: parseFloat(formData.amount) * parseFloat(formData.price)
     };
 
-    // Portfelni yangilash
-    setPortfolio((prev: any) => ({
-      ...prev,
-      total_value: prev.total_value + newAsset.total_value,
-      assets_count: prev.assets.some((a: any) => a.symbol === newAsset.symbol) ? prev.assets_count : prev.assets_count + 1,
-      assets: [...prev.assets, newAsset]
-    }));
+    // Portfelni yangilash (Mavjud bo'lsa qo'shish, bo'lmasa yangi yaratish)
+    setPortfolio((prev: any) => {
+      const existingAssetIndex = prev.assets.findIndex((a: any) => a.symbol === newAsset.symbol);
+      let updatedAssets = [...prev.assets];
+
+      if (existingAssetIndex !== -1) {
+        // Mavjud aktivni yangilash
+        updatedAssets[existingAssetIndex] = {
+          ...updatedAssets[existingAssetIndex],
+          amount: updatedAssets[existingAssetIndex].amount + newAsset.amount,
+          total_value: (updatedAssets[existingAssetIndex].amount + newAsset.amount) * newAsset.current_price
+        };
+      } else {
+        // Yangi aktiv qo'shish
+        updatedAssets.push(newAsset);
+      }
+
+      return {
+        ...prev,
+        total_value: updatedAssets.reduce((sum, a) => sum + a.total_value, 0),
+        assets_count: updatedAssets.length,
+        assets: updatedAssets
+      };
+    });
 
     setIsModalOpen(false);
     setFormData({ symbol: '', amount: '', price: '', type: 'buy' });
