@@ -22,22 +22,32 @@ export default function Dashboard() {
     assets: []
   });
 
+  const API_URL = 'https://crypto-api-v3-oybek.azurewebsites.net';
+
   const fetchPortfolio = async () => {
     try {
-      // Mock data for demo including Cash
-      setPortfolio({
-        total_value: 55230.50,
-        assets_count: 4,
-        assets: [
-          { symbol: 'BTC', name: 'Bitcoin', amount: 0.5, current_price: 65000, total_value: 32500 },
-          { symbol: 'ETH', name: 'Ethereum', amount: 4.2, current_price: 3500, total_value: 14700 },
-          { symbol: 'SOL', name: 'Solana', amount: 15, current_price: 145, total_value: 2175 },
-          { symbol: 'USD', name: 'Cash (Naqd pul)', amount: 5855.50, current_price: 1, total_value: 5855.50 }
-        ]
-      });
+      setLoading(true);
+      const res = await fetch(`${API_URL}/portfolio/summary`);
+      if (res.ok) {
+        const data = await res.json();
+        setPortfolio(data);
+      } else {
+        // Agar API xato bersa, mock data (demo uchun)
+        setPortfolio({
+          total_value: 55230.50,
+          assets_count: 4,
+          assets: [
+            { symbol: 'BTC', name: 'Bitcoin', amount: 0.5, current_price: 65000, total_value: 32500 },
+            { symbol: 'ETH', name: 'Ethereum', amount: 4.2, current_price: 3500, total_value: 14700 },
+            { symbol: 'SOL', name: 'Solana', amount: 15, current_price: 145, total_value: 2175 },
+            { symbol: 'USD', name: 'Cash (Naqd pul)', amount: 5855.50, current_price: 1, total_value: 5855.50 }
+          ]
+        });
+      }
       setLoading(false);
     } catch (e) {
-      console.error(e);
+      console.error("API ulanish xatosi:", e);
+      setLoading(false);
     }
   };
 
@@ -48,59 +58,30 @@ export default function Dashboard() {
   const handleAddTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const amount = parseFloat(formData.amount);
-    const price = parseFloat(formData.price);
-    const total_cost = amount * price;
-    const isSell = formData.type === 'sell';
+    try {
+      const response = await fetch(`${API_URL}/transactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbol: formData.symbol,
+          amount: parseFloat(formData.amount),
+          price_at_purchase: parseFloat(formData.price),
+          type: formData.type
+        })
+      });
 
-    const newAsset = {
-      symbol: formData.symbol,
-      name: formData.symbol === 'BTC' ? 'Bitcoin' : formData.symbol === 'ETH' ? 'Ethereum' : formData.symbol,
-      amount: isSell ? -amount : amount,
-      current_price: price,
-      total_value: total_cost
-    };
-
-    setPortfolio((prev: any) => {
-      let updatedAssets = [...prev.assets];
-      
-      // 1. Kripto aktivni yangilash
-      const existingIndex = updatedAssets.findIndex(a => a.symbol === newAsset.symbol);
-      if (existingIndex !== -1) {
-        updatedAssets[existingIndex] = {
-          ...updatedAssets[existingIndex],
-          amount: updatedAssets[existingIndex].amount + newAsset.amount,
-          total_value: (updatedAssets[existingIndex].amount + newAsset.amount) * price
-        };
-      } else if (!isSell) {
-        updatedAssets.push({...newAsset, amount: amount, total_value: total_cost});
+      if (response.ok) {
+        alert("Tranzaksiya Azure SQL bazasiga saqlandi!");
+        fetchPortfolio(); // Bazadan yangi ma'lumotlarni qayta yuklash
+      } else {
+        alert("Xatolik: Bazaga saqlab bo'lmadi.");
       }
-
-      // 2. Naqd pul (USD) balansini yangilash
-      const cashIndex = updatedAssets.findIndex(a => a.symbol === 'USD');
-      if (cashIndex !== -1) {
-        const cashChange = isSell ? total_cost : -total_cost;
-        updatedAssets[cashIndex] = {
-          ...updatedAssets[cashIndex],
-          amount: updatedAssets[cashIndex].amount + cashChange,
-          total_value: updatedAssets[cashIndex].amount + cashChange
-        };
-      }
-
-      // 0 bo'lib qolgan kriptolarni o'chirish (USD dan tashqari)
-      updatedAssets = updatedAssets.filter(a => a.symbol === 'USD' || a.amount > 0);
-
-      return {
-        ...prev,
-        total_value: updatedAssets.reduce((sum, a) => sum + a.total_value, 0),
-        assets_count: updatedAssets.length,
-        assets: updatedAssets
-      };
-    });
+    } catch (error) {
+      alert("Backend bilan ulanishda xatolik.");
+    }
 
     setIsModalOpen(false);
     setFormData({ symbol: '', amount: '', price: '', type: 'buy' });
-    alert(`${formData.symbol} tranzaksiyasi bajarildi!`);
   };
 
   return (
