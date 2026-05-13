@@ -61,8 +61,11 @@ export default function Dashboard() {
       total_value: parseFloat(formData.amount) * parseFloat(formData.price)
     };
 
-    // Portfelni yangilash (Mavjud bo'lsa qo'shish, bo'lmasa yangi yaratish)
+    // Portfelni yangilash (Mavjud bo'lsa qo'shish/ayirish, bo'lmasa yangi yaratish)
     setPortfolio((prev: any) => {
+      const isSell = formData.type === 'sell';
+      const changeAmount = isSell ? -parseFloat(formData.amount) : parseFloat(formData.amount);
+      
       const existingAssetIndex = prev.assets.findIndex((a: any) => a.symbol === newAsset.symbol);
       let updatedAssets = [...prev.assets];
 
@@ -70,13 +73,16 @@ export default function Dashboard() {
         // Mavjud aktivni yangilash
         updatedAssets[existingAssetIndex] = {
           ...updatedAssets[existingAssetIndex],
-          amount: updatedAssets[existingAssetIndex].amount + newAsset.amount,
-          total_value: (updatedAssets[existingAssetIndex].amount + newAsset.amount) * newAsset.current_price
+          amount: updatedAssets[existingAssetIndex].amount + changeAmount,
+          total_value: (updatedAssets[existingAssetIndex].amount + changeAmount) * newAsset.current_price
         };
-      } else {
-        // Yangi aktiv qo'shish
+      } else if (!isSell) {
+        // Yangi aktiv qo'shish (faqat sotib olinganda)
         updatedAssets.push(newAsset);
       }
+
+      // Miqdori 0 yoki undan kam bo'lib qolsa ro'yxatdan o'chirish
+      updatedAssets = updatedAssets.filter(a => a.amount > 0);
 
       return {
         ...prev,
