@@ -59,13 +59,13 @@ export default function Dashboard() {
     e.preventDefault();
     
     try {
-      const response = await fetch(`${API_URL}/transactions`, {
+      const response = await fetch(`${API_URL}/transactions/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           symbol: formData.symbol,
           amount: parseFloat(formData.amount),
-          price_at_purchase: parseFloat(formData.price),
+          price: parseFloat(formData.price),
           type: formData.type
         })
       });
