@@ -14,15 +14,22 @@ import {
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({ symbol: '', amount: '', price: '', type: 'buy' });
   const [portfolio, setPortfolio] = useState<any>({
     total_value: 0,
     assets_count: 0,
     assets: []
   });
 
-  // Backend'dan ma'lumotlarni olish (Hozircha mock ma'lumotlar bilan boyitilgan)
-  useEffect(() => {
-    setTimeout(() => {
+  const fetchPortfolio = async () => {
+    try {
+      // Real API ulanishi (agar backend ishlayotgan bo'lsa)
+      // const res = await fetch('https://crypto-api-v3-oybek.azurewebsites.net/portfolio/summary');
+      // const data = await res.json();
+      // setPortfolio(data);
+      
+      // Mock data for demo
       setPortfolio({
         total_value: 45230.50,
         assets_count: 3,
@@ -33,22 +40,109 @@ export default function Dashboard() {
         ]
       });
       setLoading(false);
-    }, 1000);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    fetchPortfolio();
   }, []);
 
+  const handleAddTransaction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Ma'lumot yuborilmoqda:", formData);
+    // Bu yerda API ga yuborish kodi bo'ladi
+    setIsModalOpen(false);
+    alert("Tranzaksiya muvaffaqiyatli saqlandi!");
+  };
+
   return (
-    <main className="p-8 max-w-7xl mx-auto space-y-8">
+    <main className="p-8 max-w-7xl mx-auto space-y-8 relative">
       {/* Header */}
       <header className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-bold gradient-text">Crypto Portfolio</h1>
           <p className="text-gray-400 mt-2">Xush kelibsiz, aktivlaringiz nazorat ostida.</p>
         </div>
-        <button className="gradient-bg px-6 py-3 rounded-full font-semibold flex items-center gap-2 hover:opacity-90 transition shadow-lg shadow-indigo-500/20">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="gradient-bg px-6 py-3 rounded-full font-semibold flex items-center gap-2 hover:opacity-90 transition shadow-lg shadow-amber-500/20 active:scale-95">
           <PlusCircle size={20} />
           Tranzaksiya Qo'shish
         </button>
       </header>
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-card w-full max-w-md p-8 border-amber-500/30">
+            <h2 className="text-2xl font-bold mb-6 gradient-text">Yangi Tranzaksiya</h2>
+            <form onSubmit={handleAddTransaction} className="space-y-4">
+              <div>
+                <label className="text-sm text-gray-400 block mb-1">Kriptovalyuta (masalan: BTC)</label>
+                <input 
+                  type="text" 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 focus:border-amber-500 outline-none"
+                  value={formData.symbol}
+                  onChange={(e) => setFormData({...formData, symbol: e.target.value.toUpperCase()})}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-gray-400 block mb-1">Miqdor</label>
+                  <input 
+                    type="number" 
+                    step="any"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 focus:border-amber-500 outline-none"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-400 block mb-1">Narxi ($)</label>
+                  <input 
+                    type="number" 
+                    step="any"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 focus:border-amber-500 outline-none"
+                    value={formData.price}
+                    onChange={(e) => setFormData({...formData, price: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm text-gray-400 block mb-1">Amal turi</label>
+                <select 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 focus:border-amber-500 outline-none appearance-none"
+                  value={formData.type}
+                  onChange={(e) => setFormData({...formData, type: e.target.value})}
+                >
+                  <option value="buy">Sotib olish (Buy)</option>
+                  <option value="sell">Sotish (Sell)</option>
+                </select>
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition"
+                >
+                  Bekor qilish
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 gradient-bg px-6 py-3 rounded-xl font-bold text-black hover:opacity-90 transition"
+                >
+                  Saqlash
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
